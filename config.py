@@ -8,6 +8,8 @@ from typing import Optional, Set
 
 from dotenv import load_dotenv
 
+import paths
+
 
 @dataclass
 class Settings:
@@ -74,24 +76,16 @@ def _as_bool(raw: str) -> bool:
 
 
 def _parse_persona_path(raw: str) -> Optional[Path]:
-    """相对路径按项目根目录解析，避免依赖当前工作目录。"""
-    raw = raw.strip()
-    if not raw:
-        return None
-    path = Path(raw)
-    return path if path.is_absolute() else Path(__file__).resolve().parent / path
+    """相对路径按 APP_ROOT 解析，避免依赖当前工作目录。"""
+    return paths.resolve_path(raw)
 
 
 def _parse_dir(raw: str) -> Optional[Path]:
     """目录路径解析（同 _parse_persona_path，但语义不同）。"""
-    raw = raw.strip()
-    if not raw:
-        return None
-    path = Path(raw)
-    return path if path.is_absolute() else Path(__file__).resolve().parent / path
+    return paths.resolve_path(raw)
 
 
-_ENV_PATH = Path(__file__).resolve().parent / ".env"
+_ENV_PATH = paths.ENV_PATH
 
 
 def load_settings() -> Settings:
@@ -112,7 +106,7 @@ def load_settings() -> Settings:
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
         llm_api_key=os.getenv("LLM_API_KEY", ""),
         llm_base_url=os.getenv("LLM_BASE_URL", "https://api.deepseek.com"),
-        llm_model=os.getenv("LLM_MODEL", "deepseek-chat"),
+        llm_model=os.getenv("LLM_MODEL", "deepseek-flash"),
         llm_timeout=float(os.getenv("LLM_TIMEOUT", "60")),
         max_history=int(os.getenv("MAX_HISTORY", "20")),
         system_prompt=os.getenv("SYSTEM_PROMPT", "你是一个乐于助人的中文聊天伙伴，回答简洁自然。"),

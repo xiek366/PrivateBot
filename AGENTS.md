@@ -61,6 +61,7 @@
 | 6 | 已验收 | docs/stage6-design.md | 已写 | 角色状态系统（affection/trust/valence/arousal + 事件表 + 衰减 + Prompt 动态注入） |
 | 7 | 代码已写，待本地验收 | docs/stage7-design.md | 已写 | 长期记忆库 + 主动发消息调度器 |
 | 8 | 规划中 | - | - | LLM JSON 输出格式 / 关系等级行为对照表 / 其他优化 |
+| 9 | 已自测，待用户侧人工验收 | docs/stage9-design.md | 已写 | 零基础分发（exe 打包 + 图形配置向导 + 环境自检 + 图文教程） |
 
 > 每完成一个阶段，更新此表。
 
@@ -69,6 +70,8 @@
 - Python 3.11+（Windows 上若 `python` 命令指向 Microsoft Store 占位程序，改用解释器绝对路径调用）
 - websockets 17.1 —— 必须使用新版 asyncio API（>= 14.0），详见 `docs/stage1-design.md` §2.1
 - httpx 0.28.1、python-dotenv 已安装
+- PyInstaller（>= 6.0）仅作**构建期**依赖，见 `requirements-build.txt`，运行时不依赖
+- 打包入口：`build.bat` → 产出 `dist/PrivateBot/` 与 `PrivateBot-win64.zip`（两者均不入库）
 - 本地验收方式：`tools/mock_client.py` 模拟 NapCat 客户端，配一个本地模拟 LLM 服务即可全链路验证，无需真实 QQ 与真实 API Key
 
 ## 四、沟通规则
