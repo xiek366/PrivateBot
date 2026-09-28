@@ -33,29 +33,29 @@ class Settings:
     system_prompt: str
     # 人设
     persona_file: Optional[Path]
-    # 限流：同用户最多保留 1 条待处理消息
+    # 限流
     max_pending_per_user: int
-    # 自动摘要：累计到此条数时触发摘要
+    # 自动摘要
     summary_threshold: int
-    # 自动摘要：摘要后滑窗口保留多少条近期对话
     summary_keep: int
-    # 自动摘要：生成 temperature（越低越稳定）
     llm_summary_temp: float
-    # 参考语料目录（Stage 5 轻量检索）
+    # 参考语料目录
     style_dir: Optional[Path]
-    # 角色状态目录（Stage 6）
+    # 角色状态目录
     state_dir: Optional[Path]
-    # 长期记忆目录（Stage 7）
+    # 长期记忆目录
     memory_dir: Optional[Path]
-    # 主动发消息开关（Stage 7）
+    # 主动发消息
     enable_proactive: bool
-    # 主动发消息：最少隔多少小时才发
     proactive_min_hours: float
-    # 主动发消息：最低好感度阈值
     proactive_min_affection: float
-    # 主动发消息：时间窗口
     proactive_window_start: str
     proactive_window_end: str
+    # Stage 8: 识图能力
+    vision_enabled: bool
+    vision_max_images: int
+    vision_max_mb: int
+    vision_detail: str
 
 
 def _parse_qq_list(raw: str) -> Set[int]:
@@ -76,12 +76,10 @@ def _as_bool(raw: str) -> bool:
 
 
 def _parse_persona_path(raw: str) -> Optional[Path]:
-    """相对路径按 APP_ROOT 解析，避免依赖当前工作目录。"""
     return paths.resolve_path(raw)
 
 
 def _parse_dir(raw: str) -> Optional[Path]:
-    """目录路径解析（同 _parse_persona_path，但语义不同）。"""
     return paths.resolve_path(raw)
 
 
@@ -123,4 +121,8 @@ def load_settings() -> Settings:
         proactive_min_affection=float(os.getenv("PROACTIVE_MIN_AFFECTION", "30")),
         proactive_window_start=os.getenv("PROACTIVE_WINDOW_START", "08:00"),
         proactive_window_end=os.getenv("PROACTIVE_WINDOW_END", "23:00"),
+        vision_enabled=_as_bool(os.getenv("VISION_ENABLED", "true")),
+        vision_max_images=int(os.getenv("VISION_MAX_IMAGES", "3")),
+        vision_max_mb=int(os.getenv("VISION_MAX_MB", "16")),
+        vision_detail=os.getenv("VISION_DETAIL", "low"),
     )
