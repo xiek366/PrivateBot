@@ -103,6 +103,44 @@ class SessionStore:
         except OSError as exc:
             logger.warning("保存会话失败 user_id=%d: %s", user_id, exc)
 
+    async def scan_and_summarize(self, llm: Optional["LLMClient"]) -> int:
+        """启动时扫描所有磁盘上的 session 文件，超过阈值的立即摘要。
+
+        解决频繁重启导致的"messages 凑不够 summary_threshold，
+        旧对话永远没被压缩进 summary，重启后滑窗口直接丢掉"的问题。
+        返回本次处理的用户数。
+        """
+        if llm is None:
+            return 0
+
+        # 扫描磁盘上所有 JSON 文件，不要依赖内存里的 _sessions（刚启动是空的）
+        target_count = self._summary_threshold - self._summary_keep + 5  # 比触发阈值松一点
+        processed = 0
+        for path in sorted(self._dir.glob("*.json")):
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                msgs = raw.get("messages", [])
+                uid = int(raw.get("user_id", path.stem))
+            except (json.JSONDecodeError, OSError, ValueError):
+                continue
+
+            if len(msgs) < target_count:
+                continue  # 还不够多，先不动
+
+            # 强制标记 pending，让 maybe_summarize 处理
+            self._ensure(uid)  # 加载进内存
+            self._sessions[uid] = (
+                self._sessions[uid][0],
+                self._sessions[uid][1],
+                True,  # pending=True
+            )
+            processed += 1
+
+        if processed:
+            logger.info("启动扫描：%d 个用户的会话需要补摘要", processed)
+            await self.maybe_summarize(llm)
+        return processed
+
     async def maybe_summarize(self, llm: Optional["LLMClient"]) -> None:
         """对所有 pending 的用户触发自动摘要。
 

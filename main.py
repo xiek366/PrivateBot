@@ -145,6 +145,15 @@ async def main() -> None:
     logger.info("日志文件: %s", paths.LOG_FILE)
     persona.get_system_prompt()  # 启动时预加载，尽早暴露人设配置问题
 
+    # 启动扫描：把因重启漏掉的旧对话补成摘要
+    # 在主线程跑，启动会多等 1-2 秒，但能避免重启导致历史丢失
+    try:
+        fixed = await sessions.scan_and_summarize(llm)
+        if fixed:
+            logger.info("启动摘要补全完成：处理 %d 个用户", fixed)
+    except Exception as exc:
+        logger.warning("启动摘要扫描失败（不影响运行）: %s", exc)
+
     # 启动主动消息调度器（后台 task，不阻塞主流程）
     if settings.enable_proactive and state_mgr.enabled:
         scheduler = ProactiveScheduler(settings, state_mgr, llm, bot, memory)

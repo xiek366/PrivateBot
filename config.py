@@ -33,25 +33,30 @@ class Settings:
     system_prompt: str
     # 人设
     persona_file: Optional[Path]
-    # 限流
+    # 限流：同用户最多保留 1 条待处理消息
     max_pending_per_user: int
-    # 自动摘要
+    # 自动摘要：累计到此条数时触发摘要
     summary_threshold: int
+    # 自动摘要：摘要后滑窗口保留多少条近期对话
     summary_keep: int
+    # 自动摘要：生成 temperature（越低越稳定）
     llm_summary_temp: float
-    # 参考语料目录
+    # 参考语料目录（Stage 5 轻量检索）
     style_dir: Optional[Path]
-    # 角色状态目录
+    # 角色状态目录（Stage 6）
     state_dir: Optional[Path]
-    # 长期记忆目录
+    # 长期记忆目录（Stage 7）
     memory_dir: Optional[Path]
-    # 主动发消息
+    # 主动发消息开关（Stage 7）
     enable_proactive: bool
+    # 主动发消息：最少隔多少小时才发
     proactive_min_hours: float
+    # 主动发消息：最低好感度阈值
     proactive_min_affection: float
+    # 主动发消息：时间窗口
     proactive_window_start: str
     proactive_window_end: str
-    # Stage 8: 识图能力
+    # Stage 8：识图能力
     vision_enabled: bool
     vision_max_images: int
     vision_max_mb: int
@@ -76,10 +81,12 @@ def _as_bool(raw: str) -> bool:
 
 
 def _parse_persona_path(raw: str) -> Optional[Path]:
+    """相对路径按 APP_ROOT 解析，避免依赖当前工作目录。"""
     return paths.resolve_path(raw)
 
 
 def _parse_dir(raw: str) -> Optional[Path]:
+    """目录路径解析（同 _parse_persona_path，但语义不同）。"""
     return paths.resolve_path(raw)
 
 
@@ -106,11 +113,11 @@ def load_settings() -> Settings:
         llm_base_url=os.getenv("LLM_BASE_URL", "https://api.deepseek.com"),
         llm_model=os.getenv("LLM_MODEL", "deepseek-flash"),
         llm_timeout=float(os.getenv("LLM_TIMEOUT", "60")),
-        max_history=int(os.getenv("MAX_HISTORY", "20")),
+        max_history=int(os.getenv("MAX_HISTORY", "40")),
         system_prompt=os.getenv("SYSTEM_PROMPT", "你是一个乐于助人的中文聊天伙伴，回答简洁自然。"),
         persona_file=_parse_persona_path(os.getenv("PERSONA_FILE", "data/personas/default.yaml")),
         max_pending_per_user=int(os.getenv("MAX_PENDING_PER_USER", "1")),
-        summary_threshold=int(os.getenv("SUMMARY_THRESHOLD", "30")),
+        summary_threshold=int(os.getenv("SUMMARY_THRESHOLD", "15")),
         summary_keep=int(os.getenv("SUMMARY_KEEP", "10")),
         llm_summary_temp=float(os.getenv("LLM_SUMMARY_TEMP", "0.3")),
         style_dir=_parse_dir(os.getenv("STYLE_DIR", "data/style")),
