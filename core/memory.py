@@ -162,17 +162,24 @@ class MemoryStore:
         if not entries:
             return []
 
-        # 关键词提取（query 里的中文字符作为粗匹配）
-        query_keywords = set(re.findall(r"[\u4e00-\u9fff]+", query))
+        # 关键词提取（Stage 8.2：2-gram 匹配。旧版抓整段中文做子串匹配，
+        # 整句几乎不可能出现在记忆内容里，导致 kw_score 恒为 0）
+        segments = re.findall(r"[\u4e00-\u9fff]+", query)
+        grams: set[str] = set()
+        for seg in segments:
+            if len(seg) < 2:
+                grams.add(seg)  # 单字称呼保留整段
+            else:
+                grams.update(seg[i:i + 2] for i in range(len(seg) - 1))
 
         scored: list[tuple[float, MemoryEntry]] = []
         for e in entries:
             # 文本相似度
             sim = SequenceMatcher(None, query, e.content).ratio()
 
-            # 关键词命中
-            kw_hit = sum(1 for kw in query_keywords if kw in e.content)
-            kw_score = min(kw_hit * 0.2, 0.4)
+            # 关键词命中（2-gram 归一化，上限 0.4 不变）
+            kw_hit = sum(1 for g in grams if g in e.content)
+            kw_score = (kw_hit / len(grams)) * 0.4 if grams else 0.0
 
             # 相关性分（sim 和 kw_hit 取高）
             relevance = max(sim, kw_score)
@@ -252,13 +259,20 @@ class MemoryStore:
         return min(1.0, 1.0 / (1.0 + days * 0.2))
 
 
-def memories_to_prompt(memories: list[MemoryEntry]) -> str:
-    """把检索到的记忆转成自然语言注入 Prompt。"""
+def memories_to_prompt(memories: list[MemoryEntry], recall_mode: bool = False) -> str:
+    """把检索到的记忆转成自然语言注入 Prompt。
+
+    recall_mode=True 表示用户正在主动提起过去的事，使用回忆专用引导文案。
+    """
     if not memories:
         return ""
-    lines = [
-        "以下是你对这个用户的了解，请在对话中自然地体现出来（不要说'根据我的记忆'，要像真的记得一样）："
-    ]
+    if recall_mode:
+        header = ("用户正在向你提起过去聊过的事，请认真回忆以下内容并自然回应，"
+                  "不要说'我不记得了'：")
+    else:
+        header = ("以下是你对这个用户的了解，请在对话中自然地体现出来"
+                  "（不要说'根据我的记忆'，要像真的记得一样）：")
+    lines = [header]
     for m in memories:
         lines.append(f"- {m.content}")
     return "\n".join(lines)
