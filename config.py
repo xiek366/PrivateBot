@@ -61,6 +61,8 @@ class Settings:
     vision_max_images: int
     vision_max_mb: int
     vision_detail: str
+    # Stage 8.2：回忆意图触发时的记忆检索条数
+    recall_top_k: int
 
 
 def _parse_qq_list(raw: str) -> Set[int]:
@@ -132,4 +134,5 @@ def load_settings() -> Settings:
         vision_max_images=int(os.getenv("VISION_MAX_IMAGES", "3")),
         vision_max_mb=int(os.getenv("VISION_MAX_MB", "16")),
         vision_detail=os.getenv("VISION_DETAIL", "low"),
+        recall_top_k=int(os.getenv("RECALL_TOP_K", "15")),
     )
