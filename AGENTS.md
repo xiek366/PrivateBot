@@ -60,7 +60,7 @@
 | 5 | 已验收 | docs/stage5-design.md | 已写 | 参考语料轻量检索（2-gram） |
 | 6 | 已验收 | docs/stage6-design.md | 已写 | 角色状态系统（affection/trust/valence/arousal + 事件表 + 衰减 + Prompt 动态注入） |
 | 7 | 代码已写，待本地验收 | docs/stage7-design.md | 已写 | 长期记忆库 + 主动发消息调度器 |
-| 8 | 规划中 | - | - | LLM JSON 输出格式 / 关系等级行为对照表 / 其他优化 |
+| 8 | 8 已验收；8.1/8.2 已自测待验收 | docs/stage8-design.md（8.1/8.2 同目录） | 已写 | 8 多模态识图；8.1 记忆强化（MAX_HISTORY 40 / SUMMARY_THRESHOLD 15 / 启动补摘要）；8.2 记忆检索强化（回忆意图 top_k=15 / 2-gram 匹配 / 注入位置后移 / 摘要保真） |
 | 9 | 已自测，待用户侧人工验收 | docs/stage9-design.md | 已写 | 零基础分发（exe 打包 + 图形配置向导 + 环境自检 + 图文教程） |
 
 > 每完成一个阶段，更新此表。
